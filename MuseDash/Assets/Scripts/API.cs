@@ -12,14 +12,29 @@ public class API : MonoBehaviour
 
     // 先新增一個類型為 類別 的欄位 物件名稱
     public GameObject obj1;
+    public GameObject obj2;
+    public Transform tra1;
     
-    // 2. 設定非靜態屬性
-    // 3. 使用非靜態方法
-
     private void Start()
     {
+        print("隨機：" + Random.value);
+
         // 1. 取得非靜態屬性
         // 語法：物件名稱.屬性名稱
-        print(obj1.layer);
+        print("圖層：" + obj1.layer);
+        print("標籤：" + obj1.tag);
+        print("座標：" + tra1.position);
+
+        // 2. 設定非靜態屬性
+        // 語法：物件名稱.屬性名稱 指定 值
+        obj2.layer = 5;
+        tra1.position = new Vector3(2, 3, 4);
+    }
+
+    private void Update()
+    {
+        // 3. 使用非靜態方法
+        // 語法：物件名稱.方法名稱(對應的參數)
+        tra1.Translate(0.1f, 0, 0);
     }
 }

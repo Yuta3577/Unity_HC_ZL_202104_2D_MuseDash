@@ -24,7 +24,11 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Jump()
     {
-
+        // 如果 玩家按下跳躍 就 跳躍
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            ani.SetTrigger("跳躍觸發");
+        }
     }
 
     /// <summary>
@@ -32,7 +36,11 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Attack()
     {
-
+        // 如果 玩家按下攻擊 就 攻擊
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            ani.SetTrigger("攻擊觸發");
+        }
     }
 
     /// <summary>
@@ -59,6 +67,20 @@ public class Player : MonoBehaviour
     private void AddScore(int add)
     {
 
+    }
+    #endregion
+
+    #region 事件
+    private void Start()
+    {
+        // 動畫元件 = 取得元件<泛型>()；
+        ani = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        Jump();
+        Attack();
     }
     #endregion
 }

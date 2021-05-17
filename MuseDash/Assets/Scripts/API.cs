@@ -14,6 +14,11 @@ public class API : MonoBehaviour
     public GameObject obj1;
     public GameObject obj2;
     public Transform tra1;
+
+    public Camera cam;
+    public SpriteRenderer spr1;
+    public Transform tra2;
+    public Rigidbody2D rig;
     
     private void Start()
     {
@@ -29,6 +34,12 @@ public class API : MonoBehaviour
         // 語法：物件名稱.屬性名稱 指定 值
         obj2.layer = 5;
         tra1.position = new Vector3(2, 3, 4);
+
+        print("攝影機深度：" + cam.depth);
+        print("第一張圖的顏色：" + spr1.color);
+
+        cam.backgroundColor = new Color(0.8f, 0.4f, 0.5f);
+        spr1.flipY = true;
     }
 
     private void Update()
@@ -36,5 +47,7 @@ public class API : MonoBehaviour
         // 3. 使用非靜態方法
         // 語法：物件名稱.方法名稱(對應的參數)
         tra1.Translate(0.1f, 0, 0);
+        tra2.Rotate(0, 0, 1);
+        rig.AddForce(new Vector2(0, 10));
     }
 }

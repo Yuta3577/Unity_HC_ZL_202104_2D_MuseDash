@@ -732,3 +732,7 @@ MonoBehaviour:
   obj1: {fileID: 1430061626}
   obj2: {fileID: 1571488652}
   tra1: {fileID: 642158337}
+  cam: {fileID: 1430061628}
+  spr1: {fileID: 809922445}
+  tra2: {fileID: 1403365796}
+  rig: {fileID: 363687537}

@@ -10103,7 +10103,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2.5
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
@@ -10121,9 +10121,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc85f49b7a84b5945a030a645b8102b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jump: 100
+  jump: 700
   hp: 500
   isGround: 0
+  soundJump: {fileID: 8300000, guid: 6ea53e7b79ea03c4ebbc86ded140aaf3, type: 3}
+  soundAttack: {fileID: 8300000, guid: e2d61cf99cb50e44895e3cf9b84c2b6a, type: 3}
+  groundRadius: 0.3
+  groundOffset: {x: -0.75, y: -2.1, z: 0}
 --- !u!1 &1268814194
 GameObject:
   m_ObjectHideFlags: 0
@@ -15546,7 +15550,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1859282168}
   - component: {fileID: 1859282169}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: "\u5730\u677F\u78B0\u649E"
   m_TagString: Untagged
   m_Icon: {fileID: 0}

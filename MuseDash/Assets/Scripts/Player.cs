@@ -31,6 +31,17 @@ public class Player : MonoBehaviour
         {
             ani.SetTrigger("跳躍觸發");
             rig.AddForce(new Vector2(0, jump));     // 剛體.添加推力(二維向量)
+            aud.PlayOneShot(soundJump);
+        }
+        // 否則 按下跳躍 並且 在空中(不在地板上) 跳躍動畫、座標 2.1
+        // != 不等於
+        // 原本寫法：isGround != true 可以簡寫為 !isGround
+        else if (Input.GetKeyDown(KeyCode.F) && !isGround)
+        {
+            ani.SetTrigger("跳躍觸發");
+            transform.position = new Vector3(-6, 2.1f, 0);  // 停留在空中
+            rig.velocity = Vector2.zero;                    // 剛體的加速度歸零
+            aud.PlayOneShot(soundJump);
         }
 
         // 碰到的物件 = 2D 物理.覆蓋圓圈(中心點，半徑，圖層)
@@ -61,6 +72,11 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.J))
         {
             ani.SetTrigger("攻擊觸發");
+
+            // 回到地面 -6, -2.39
+            transform.position = new Vector3(-6, -2.39f, 0);
+            // 音源.播放一次音效(音效，音量)
+            aud.PlayOneShot(soundAttack);
         }
     }
 
@@ -97,6 +113,7 @@ public class Player : MonoBehaviour
         // 動畫元件 = 取得元件<泛型>()；
         ani = GetComponent<Animator>();
         rig = GetComponent<Rigidbody2D>();
+        aud = GetComponent<AudioSource>();
     }
 
     private void Update()

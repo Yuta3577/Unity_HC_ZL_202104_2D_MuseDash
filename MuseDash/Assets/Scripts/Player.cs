@@ -92,9 +92,10 @@ public class Player : MonoBehaviour
     /// <summary>
     /// 死亡
     /// </summary>
-    private bool Dead()
+    public bool Dead()
     {
-        return false;
+        ani.SetBool("死亡開關", true);
+        return ani.GetBool("死亡開關");
     }
 
     /// <summary>
@@ -118,6 +119,8 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if (Dead()) return;
+
         Jump();
         Attack();
     }

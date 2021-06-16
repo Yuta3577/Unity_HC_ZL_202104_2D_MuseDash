@@ -36,6 +36,10 @@ public class MusicManager : MonoBehaviour
     /// 玩家血量最大值
     /// </summary>
     private float maxHp;
+    /// <summary>
+    /// 結束畫面
+    /// </summary>
+    private CanvasGroup groupFinal;
     #endregion
 
     private void Start()
@@ -48,10 +52,12 @@ public class MusicManager : MonoBehaviour
         textHp = GameObject.Find("血量").GetComponent<Text>();
 
         player = GameObject.Find("主角").GetComponent<Player>();
-        maxHp = player.hp;                                              // 取得一開始的血量 - 最大值
-        textHp.text = player.hp + " / " + maxHp;                        // 遊戲開始時更新介面
+        maxHp = player.hp;                                                  // 取得一開始的血量 - 最大值
+        textHp.text = player.hp + " / " + maxHp;                            // 遊戲開始時更新介面
 
-        Invoke("StartMusic", musicData.timeWait);       // 等待後開始生成
+        groupFinal = GameObject.Find("結束畫面").GetComponent<CanvasGroup>();
+
+        Invoke("StartMusic", musicData.timeWait);                           // 等待後開始生成
     }
 
     // 觸發事件：collision 觸發到的物件
@@ -124,5 +130,25 @@ public class MusicManager : MonoBehaviour
         player.hp -= 20;
         textHp.text = player.hp + " / " + maxHp;        // 更新血量文字介面
         imgHp.fillAmount = player.hp / maxHp;           // 更新血條圖片介面
+
+        // 判斷式 只有一個分號 可以忽略 大括號
+        if (player.hp <= 0) StartCoroutine(GameOver());
+    }
+
+    /// <summary>
+    /// 遊戲結束
+    /// </summary>
+    private IEnumerator GameOver()
+    {
+        player.Dead();                                  // 玩家動畫
+
+        for (int i = 0; i < 40; i++)                    // 40 次數
+        {
+            groupFinal.alpha += 0.03f;                  // 0.03 透明度
+            yield return new WaitForSeconds(0.02f);     // 0.02 等待時間
+        }
+
+        groupFinal.interactable = true;                 // 啟動互動
+        groupFinal.blocksRaycasts = true;
     }
 }

@@ -10593,7 +10593,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jump: 800
-  hp: 500
+  hp: 600
   isGround: 0
   soundJump: {fileID: 8300000, guid: 6ea53e7b79ea03c4ebbc86ded140aaf3, type: 3}
   soundAttack: {fileID: 8300000, guid: e2d61cf99cb50e44895e3cf9b84c2b6a, type: 3}

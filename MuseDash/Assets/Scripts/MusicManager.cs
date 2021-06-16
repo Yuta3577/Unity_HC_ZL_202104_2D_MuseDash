@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;       // 引用 介面 API
 using System.Collections;   // 引用 系統.集合 - 微軟提供的 API - 協同程序
 
 public class MusicManager : MonoBehaviour
@@ -19,6 +20,22 @@ public class MusicManager : MonoBehaviour
     /// 音源 - 音源物件
     /// </summary>
     private AudioSource aud;
+    /// <summary>
+    /// 介面：血條
+    /// </summary>
+    private Image imgHp;
+    /// <summary>
+    /// 介面：血量
+    /// </summary>
+    private Text textHp;
+    /// <summary>
+    /// 玩家資訊
+    /// </summary>
+    private Player player;
+    /// <summary>
+    /// 玩家血量最大值
+    /// </summary>
+    private float maxHp;
     #endregion
 
     private void Start()
@@ -27,7 +44,21 @@ public class MusicManager : MonoBehaviour
         aud.clip = musicData.music;                                     // 指定音樂
         aud.Play();                                                     // 播放音樂
 
+        imgHp = GameObject.Find("血條").GetComponent<Image>();
+        textHp = GameObject.Find("血量").GetComponent<Text>();
+
+        player = GameObject.Find("主角").GetComponent<Player>();
+        maxHp = player.hp;                                              // 取得一開始的血量 - 最大值
+        textHp.text = player.hp + " / " + maxHp;                        // 遊戲開始時更新介面
+
         Invoke("StartMusic", musicData.timeWait);       // 等待後開始生成
+    }
+
+    // 觸發事件：collision 觸發到的物件
+    // collision 指的是 碰到 子物件 - 扣血區域 的其他碰撞物件
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Hit();
     }
 
     /// <summary>
@@ -83,5 +114,15 @@ public class MusicManager : MonoBehaviour
             // 等待秒數(秒數)
             yield return new WaitForSeconds(musicData.interval);
         }
+    }
+
+    /// <summary>
+    /// 受傷：碰到音樂節點扣血、更新介面
+    /// </summary>
+    private void Hit()
+    {
+        player.hp -= 20;
+        textHp.text = player.hp + " / " + maxHp;        // 更新血量文字介面
+        imgHp.fillAmount = player.hp / maxHp;           // 更新血條圖片介面
     }
 }

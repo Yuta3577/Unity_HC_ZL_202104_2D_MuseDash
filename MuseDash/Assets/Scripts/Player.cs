@@ -12,6 +12,10 @@ public class Player : MonoBehaviour
     [Header("音效")]
     public AudioClip soundJump;
     public AudioClip soundAttack;
+    [Header("檢查地板的半徑"), Range(0.1f, 1f)]
+    public float groundRadius = 0.5f;
+    [Header("檢查地板的位移")]
+    public Vector3 groundOffset;
 
     private int score;
     private AudioSource aud;
@@ -94,7 +98,7 @@ public class Player : MonoBehaviour
     /// </summary>
     public bool Dead()
     {
-        ani.SetBool("死亡開關", true);
+        ani.SetBool("死亡開關", hp <= 0);
         return ani.GetBool("死亡開關");
     }
 
@@ -124,11 +128,6 @@ public class Player : MonoBehaviour
         Jump();
         Attack();
     }
-
-    [Header("檢查地板的半徑"), Range(0.1f, 1f)]
-    public float groundRadius = 0.5f;
-    [Header("檢查地板的位移")]
-    public Vector3 groundOffset;
 
     // 繪製圖示：輔助用
     private void OnDrawGizmos()

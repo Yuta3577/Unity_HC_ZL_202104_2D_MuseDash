@@ -11,7 +11,7 @@ public class MenuManager : MonoBehaviour
     public void StartGame()
     {
         // 延遲呼叫("方法名稱"，延遲時間)；
-        Invoke("DelayStart", 2.3f);
+        Invoke("DelayStart", 1.3f);
     }
 
     private void DelayStart()
@@ -26,7 +26,7 @@ public class MenuManager : MonoBehaviour
     /// </summary>
     public void QuitGame()
     {
-        Invoke("DelayQuit", 2.5f);
+        Invoke("DelayQuit", 1.5f);
     }
 
     private void DelayQuit()

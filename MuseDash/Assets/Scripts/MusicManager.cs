@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;       // 引用 介面 API
 using System.Collections;   // 引用 系統.集合 - 微軟提供的 API - 協同程序
+using TMPro;
 
 public class MusicManager : MonoBehaviour
 {
@@ -15,6 +16,18 @@ public class MusicManager : MonoBehaviour
     public Transform pointDown;
     [Header("此關卡音樂資料")]
     public MusicData musicData;
+    [Header("判定位置：上方")]
+    public Transform pointCheckUp;
+    [Header("判定位置：下方")]
+    public Transform pointCheckDown;
+    [Header("判定距離：Perfect Great Miss")]
+    public float rangePerfect = 0.5f;
+    public float rangeGreat = 0.8f;
+    public float rangeMiss = 1.1f;
+    [Header("上方檢查節點名稱")]
+    public string nameUp = "藍鳥";
+
+    public AreaType areaType;
 
     /// <summary>
     /// 音源 - 音源物件
@@ -42,8 +55,29 @@ public class MusicManager : MonoBehaviour
     private CanvasGroup groupFinal;
     #endregion
 
+    #region 事件
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(0, 0, 1, 0.8f);
+        Gizmos.DrawSphere(pointCheckUp.position, rangePerfect);
+        Gizmos.color = new Color(0, 1, 0, 0.3f);
+        Gizmos.DrawSphere(pointCheckUp.position, rangeGreat);
+        Gizmos.color = new Color(1, 0, 0, 0.3f);
+        Gizmos.DrawSphere(pointCheckUp.position, rangeMiss);
+    }
+
+    /// <summary>
+    /// 星星：上方
+    /// </summary>
+    private ParticleSystem psUp;
+    /// <summary>
+    /// 星星：下方
+    /// </summary>
+    private ParticleSystem psDown;
+
     private void Start()
     {
+        #region 取得物件
         aud = GameObject.Find("音源物件").GetComponent<AudioSource>();   // 尋找並取得音源元件
         aud.clip = musicData.music;                                     // 指定音樂
         aud.Play();                                                     // 播放音樂
@@ -58,6 +92,17 @@ public class MusicManager : MonoBehaviour
         groupFinal = GameObject.Find("結束畫面").GetComponent<CanvasGroup>();
 
         Invoke("StartMusic", musicData.timeWait);                           // 等待後開始生成
+
+        textScore = GameObject.Find("分數").GetComponent<Text>();
+        #endregion
+        psUp = GameObject.Find("星星：上方").GetComponent<ParticleSystem>();
+        psDown = GameObject.Find("星星：下方").GetComponent<ParticleSystem>();
+    }
+
+    private void Update()
+    {
+        CheckPoint();
+        ClickCheck();
     }
 
     // 觸發事件：collision 觸發到的物件
@@ -66,7 +111,9 @@ public class MusicManager : MonoBehaviour
     {
         Hit();
     }
+    #endregion
 
+    #region 方法
     /// <summary>
     /// 開始音樂節點生成
     /// </summary>
@@ -151,4 +198,115 @@ public class MusicManager : MonoBehaviour
         groupFinal.interactable = true;                 // 啟動互動
         groupFinal.blocksRaycasts = true;
     }
+
+    /// <summary>
+    /// 用來保存進入檢查區域的音樂節點 - 作為刪除用
+    /// </summary>
+    private GameObject objPoint;
+
+    // Unity 播放、暫停與逐格播放
+    // Ctrl + P、Ctrl + Shift + P、Ctrl + Alt + P
+    /// <summary>
+    /// 檢查音樂節點進入判定區域
+    /// </summary>
+    private void CheckPoint()
+    {
+        Collider2D hitMiss = Physics2D.OverlapCircle(pointCheckUp.position, rangeMiss);
+        Collider2D hitGreat = Physics2D.OverlapCircle(pointCheckUp.position, rangeGreat);
+        Collider2D hitPerfect = Physics2D.OverlapCircle(pointCheckUp.position, rangePerfect);
+
+        // 如果 碰撞物件存在 並且 名稱 包含 上方檢查節點名稱
+        if (hitPerfect && hitPerfect.name.Contains(nameUp))
+        {
+            areaType = AreaType.perfect;
+            objPoint = hitPerfect.gameObject;
+        }
+        else if (hitGreat && hitGreat.name.Contains(nameUp))
+        {
+            areaType = AreaType.great;
+            objPoint = hitGreat.gameObject;
+        }
+        else if (hitMiss && hitMiss.name.Contains(nameUp))
+        {
+            areaType = AreaType.miss;
+            objPoint = hitMiss.gameObject;
+        }
+        else
+        {
+            areaType = AreaType.none;
+            objPoint = null;                // null 空值
+        }
+    }
+
+    /// <summary>
+    /// 按鍵檢查 - 跳躍與攻擊 檢查 節點的得分
+    /// </summary>
+    private void ClickCheck()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            switch (areaType)
+            {
+                case AreaType.none:
+                    break;
+                case AreaType.perfect:
+                    AddScore(30);
+                    Destroy(objPoint);
+                    psUp.Play();
+                    break;
+                case AreaType.great:
+                    AddScore(15);
+                    Destroy(objPoint);
+                    psUp.Play();
+                    break;
+                case AreaType.miss:
+                    Destroy(objPoint);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 文字介面：分數
+    /// </summary>
+    private Text textScore;
+    /// <summary>
+    /// 分數
+    /// </summary>
+    private int score;
+
+    /// <summary>
+    /// 添加分數
+    /// </summary>
+    /// <param name="add">要增加的分數</param>
+    private void AddScore(int add)
+    {
+        score += add;
+        textScore.text = "SCORE：" + score;
+    }
+
+    [Header("打擊文字")]
+    public GameObject objClickText;
+
+    /// <summary>
+    /// 顯示打擊文字
+    /// </summary>
+    /// <param name="showText">打擊文字要顯示的文字</param>
+    /// <returns></returns>
+    private IEnumerator ShowText(string showText)
+    {
+        GameObject temp = Instantiate(objClickText);
+        Text tempText = temp.GetComponent<Text>();
+        tempText.text = showText;
+        yield return new WaitForSeconds(0.1f);
+    }
+    #endregion
+}
+
+/// <summary>
+/// 節點進入區域的類型：無、Perfect、Great、Miss
+/// </summary>
+public enum AreaType
+{
+    none, perfect, great, miss
 }

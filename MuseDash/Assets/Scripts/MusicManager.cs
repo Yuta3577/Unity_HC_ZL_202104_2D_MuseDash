@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;       // 引用 介面 API
 using System.Collections;   // 引用 系統.集合 - 微軟提供的 API - 協同程序
-using TMPro;
 
 public class MusicManager : MonoBehaviour
 {
@@ -26,8 +25,23 @@ public class MusicManager : MonoBehaviour
     public float rangeMiss = 1.1f;
     [Header("上方檢查節點名稱")]
     public string nameUp = "藍鳥";
+    [Header("下方檢查節點名稱")]
+    public string nameDown = "粉紅兔";
+    [Header("打擊文字")]
+    public GameObject objClickText;
+    [Header("打擊文字的顏色：Perfect、Great、Miss")]
+    public Color cPerfect;
+    public Color cGreat;
+    public Color cMiss;
 
-    public AreaType areaType;
+    /// <summary>
+    /// 紀錄上方進來的節點類型
+    /// </summary>
+    public AreaType areaTypeUp;
+    /// <summary>
+    /// 紀錄下方進來的節點類型
+    /// </summary>
+    public AreaType areaTypeDown;
 
     /// <summary>
     /// 音源 - 音源物件
@@ -53,6 +67,39 @@ public class MusicManager : MonoBehaviour
     /// 結束畫面
     /// </summary>
     private CanvasGroup groupFinal;
+    /// <summary>
+    /// 星星：上方
+    /// </summary>
+    private ParticleSystem psUp;
+    /// <summary>
+    /// 星星：下方
+    /// </summary>
+    private ParticleSystem psDown;
+    /// <summary>
+    /// 畫布
+    /// </summary>
+    private Transform traCanvas;
+    /// <summary>
+    /// 文字介面：分數
+    /// </summary>
+    private Text textScore;
+    /// <summary>
+    /// 分數
+    /// </summary>
+    private int score;
+    /// <summary>
+    /// 用來保存進入檢查區域的音樂節點 - 作為刪除用
+    /// </summary>
+    private GameObject objPointUp;
+    private GameObject objPointDown;
+    /// <summary>
+    /// 打擊文字上方的位置
+    /// </summary>
+    private Vector2 v2TextUp = new Vector2(-300, 150);
+    /// <summary>
+    /// 打擊文字下方的位置
+    /// </summary>
+    private Vector2 v2TextDown = new Vector2(-300, -250);
     #endregion
 
     #region 事件
@@ -64,16 +111,23 @@ public class MusicManager : MonoBehaviour
         Gizmos.DrawSphere(pointCheckUp.position, rangeGreat);
         Gizmos.color = new Color(1, 0, 0, 0.3f);
         Gizmos.DrawSphere(pointCheckUp.position, rangeMiss);
+
+        Gizmos.color = new Color(0, 0, 1, 0.8f);
+        Gizmos.DrawSphere(pointCheckDown.position, rangePerfect);
+        Gizmos.color = new Color(0, 1, 0, 0.3f);
+        Gizmos.DrawSphere(pointCheckDown.position, rangeGreat);
+        Gizmos.color = new Color(1, 0, 0, 0.3f);
+        Gizmos.DrawSphere(pointCheckDown.position, rangeMiss);
     }
 
     /// <summary>
-    /// 星星：上方
+    /// 介面文字：連擊數量
     /// </summary>
-    private ParticleSystem psUp;
+    private Text textCombo;
     /// <summary>
-    /// 星星：下方
+    /// 連擊數量
     /// </summary>
-    private ParticleSystem psDown;
+    private int combo;
 
     private void Start()
     {
@@ -94,15 +148,23 @@ public class MusicManager : MonoBehaviour
         Invoke("StartMusic", musicData.timeWait);                           // 等待後開始生成
 
         textScore = GameObject.Find("分數").GetComponent<Text>();
-        #endregion
+       
         psUp = GameObject.Find("星星：上方").GetComponent<ParticleSystem>();
         psDown = GameObject.Find("星星：下方").GetComponent<ParticleSystem>();
+        traCanvas = GameObject.Find("畫布").transform;
+        #endregion
+
+        textCombo = GameObject.Find("連擊數量").GetComponent<Text>();
     }
 
     private void Update()
     {
-        CheckPoint();
-        ClickCheck();
+        // 如果需要將方法執行資料保存在參數內 必須 使用 關鍵字 out
+        // out 作用：輸入的參數會保存資料
+        CheckPoint(pointCheckUp, nameUp, out objPointUp, out areaTypeUp);
+        CheckPoint(pointCheckDown, nameDown, out objPointDown, out areaTypeDown);
+        ClickCheck(KeyCode.F, areaTypeUp, objPointUp, v2TextUp);
+        ClickCheck(KeyCode.J, areaTypeDown, objPointDown, v2TextDown);
     }
 
     // 觸發事件：collision 觸發到的物件
@@ -199,34 +261,33 @@ public class MusicManager : MonoBehaviour
         groupFinal.blocksRaycasts = true;
     }
 
-    /// <summary>
-    /// 用來保存進入檢查區域的音樂節點 - 作為刪除用
-    /// </summary>
-    private GameObject objPoint;
-
     // Unity 播放、暫停與逐格播放
     // Ctrl + P、Ctrl + Shift + P、Ctrl + Alt + P
     /// <summary>
     /// 檢查音樂節點進入判定區域
     /// </summary>
-    private void CheckPoint()
+    /// <param name="pointCheck">檢查位置</param>
+    /// <param name="name">節點名稱</param>
+    /// <param name="objPoint">要將結點保存的物件</param>
+    /// <param name="areaType">要記錄進入的節點類型</param>
+    private void CheckPoint(Transform pointCheck, string name, out GameObject objPoint, out AreaType areaType)
     {
-        Collider2D hitMiss = Physics2D.OverlapCircle(pointCheckUp.position, rangeMiss);
-        Collider2D hitGreat = Physics2D.OverlapCircle(pointCheckUp.position, rangeGreat);
-        Collider2D hitPerfect = Physics2D.OverlapCircle(pointCheckUp.position, rangePerfect);
+        Collider2D hitMiss = Physics2D.OverlapCircle(pointCheck.position, rangeMiss);
+        Collider2D hitGreat = Physics2D.OverlapCircle(pointCheck.position, rangeGreat);
+        Collider2D hitPerfect = Physics2D.OverlapCircle(pointCheck.position, rangePerfect);
 
         // 如果 碰撞物件存在 並且 名稱 包含 上方檢查節點名稱
-        if (hitPerfect && hitPerfect.name.Contains(nameUp))
+        if (hitPerfect && hitPerfect.name.Contains(name))
         {
             areaType = AreaType.perfect;
             objPoint = hitPerfect.gameObject;
         }
-        else if (hitGreat && hitGreat.name.Contains(nameUp))
+        else if (hitGreat && hitGreat.name.Contains(name))
         {
             areaType = AreaType.great;
             objPoint = hitGreat.gameObject;
         }
-        else if (hitMiss && hitMiss.name.Contains(nameUp))
+        else if (hitMiss && hitMiss.name.Contains(name))
         {
             areaType = AreaType.miss;
             objPoint = hitMiss.gameObject;
@@ -241,9 +302,13 @@ public class MusicManager : MonoBehaviour
     /// <summary>
     /// 按鍵檢查 - 跳躍與攻擊 檢查 節點的得分
     /// </summary>
-    private void ClickCheck()
+    /// <param name="key">按鍵</param>
+    /// <param name="areaType">進入節點的區域類型</param>
+    /// <param name="objPoint">要刪除的節點物件</param>
+    /// <param name="v2Text">要顯示文字的位置</param>
+    private void ClickCheck(KeyCode key, AreaType areaType, GameObject objPoint, Vector2 v2Text)
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(key))
         {
             switch (areaType)
             {
@@ -253,27 +318,21 @@ public class MusicManager : MonoBehaviour
                     AddScore(30);
                     Destroy(objPoint);
                     psUp.Play();
+                    StartCoroutine(ShowText("PERFECT", v2Text, cPerfect));
                     break;
                 case AreaType.great:
                     AddScore(15);
                     Destroy(objPoint);
                     psUp.Play();
+                    StartCoroutine(ShowText("GREAT", v2Text, cGreat));
                     break;
                 case AreaType.miss:
                     Destroy(objPoint);
+                    StartCoroutine(ShowText("MISS", v2Text, cMiss));
                     break;
             }
         }
     }
-
-    /// <summary>
-    /// 文字介面：分數
-    /// </summary>
-    private Text textScore;
-    /// <summary>
-    /// 分數
-    /// </summary>
-    private int score;
 
     /// <summary>
     /// 添加分數
@@ -285,20 +344,39 @@ public class MusicManager : MonoBehaviour
         textScore.text = "SCORE：" + score;
     }
 
-    [Header("打擊文字")]
-    public GameObject objClickText;
-
     /// <summary>
     /// 顯示打擊文字
     /// </summary>
     /// <param name="showText">打擊文字要顯示的文字</param>
-    /// <returns></returns>
-    private IEnumerator ShowText(string showText)
+    /// <param name="v2Pos">打擊文字的座標</param>
+    /// <param name="color">打擊文字的顏色</param>
+    private IEnumerator ShowText(string showText, Vector2 v2Pos, Color color)
     {
-        GameObject temp = Instantiate(objClickText);
+        GameObject temp = Instantiate(objClickText, traCanvas);
         Text tempText = temp.GetComponent<Text>();
         tempText.text = showText;
-        yield return new WaitForSeconds(0.1f);
+        RectTransform rect = temp.GetComponent<RectTransform>();
+        tempText.color = color;                                     // 指定顏色
+        rect.anchoredPosition = v2Pos;                              // 指定座標
+
+        #region 上升效果
+        float up = 10;                                              // 一次上升多少
+        for (int i = 0; i < 10; i++)
+        {
+            // Vector2.up = new Vector2(0, 1)
+            rect.anchoredPosition += Vector2.up * up;               // 打擊文字.座標 累加
+            yield return new WaitForSeconds(0.02f);
+        }
+        #endregion
+
+        #region 淡出
+        for (int i = 0; i < 10; i++)
+        {
+            tempText.color -= new Color(0, 0, 0, 0.1f);
+            yield return new WaitForSeconds(0.02f);
+        }
+        Destroy(temp);
+        #endregion
     }
     #endregion
 }

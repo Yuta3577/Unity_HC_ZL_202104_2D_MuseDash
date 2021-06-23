@@ -34,7 +34,9 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F) && isGround)
         {
             ani.SetTrigger("跳躍觸發");
-            rig.AddForce(new Vector2(0, jump));     // 剛體.添加推力(二維向量)
+            // rig.AddForce(new Vector2(0, jump));              // 剛體.添加推力(二維向量)
+            transform.position = new Vector3(-6, 2.1f, 0);      // 停留在空中
+            rig.velocity = Vector2.zero;                        // 剛體的加速度歸零
             aud.PlayOneShot(soundJump);
         }
         // 否則 按下跳躍 並且 在空中(不在地板上) 跳躍動畫、座標 2.1

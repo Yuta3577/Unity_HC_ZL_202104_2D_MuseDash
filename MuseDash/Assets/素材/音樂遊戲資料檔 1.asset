@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e362c909db992d745be1bf8bdfd95b34, type: 3}
   m_Name: "\u97F3\u6A02\u904A\u6232\u8CC7\u6599\u6A94 1"
   m_EditorClassIdentifier: 
-  music: {fileID: 8300000, guid: f7a2ff6018c9173469daa5ed04a0e886, type: 3}
+  music: {fileID: 8300000, guid: 0a77e8c92a3342b449c7c85ccc627521, type: 3}
   timeWait: 1.5
   interval: 1.3
   speed: 10

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;       // 引用 介面 API
+using System.Linq;          // 引用 查詢語言 API LinQ
 using System.Collections;   // 引用 系統.集合 - 微軟提供的 API - 協同程序
 
 public class MusicManager : MonoBehaviour
@@ -100,6 +101,26 @@ public class MusicManager : MonoBehaviour
     /// 打擊文字下方的位置
     /// </summary>
     private Vector2 v2TextDown = new Vector2(-300, -250);
+    /// <summary>
+    /// 介面文字：連擊數量
+    /// </summary>
+    private Text textCombo;
+    /// <summary>
+    /// 連擊數量
+    /// </summary>
+    private int combo;
+    /// <summary>
+    /// 歌曲進度
+    /// </summary>
+    private Image imgProgressBar;
+    /// <summary>
+    /// 音樂長度
+    /// </summary>
+    private float musicLength;
+    /// <summary>
+    /// 音樂結束
+    /// </summary>
+    private bool musicEnd;
     #endregion
 
     #region 事件
@@ -121,13 +142,10 @@ public class MusicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 介面文字：連擊數量
+    /// 結束評分畫面：評分畫面
     /// </summary>
-    private Text textCombo;
-    /// <summary>
-    /// 連擊數量
-    /// </summary>
-    private int combo;
+    private CanvasGroup groupEndScore;
+    private Text textEndScore;
 
     private void Start()
     {
@@ -152,9 +170,14 @@ public class MusicManager : MonoBehaviour
         psUp = GameObject.Find("星星：上方").GetComponent<ParticleSystem>();
         psDown = GameObject.Find("星星：下方").GetComponent<ParticleSystem>();
         traCanvas = GameObject.Find("畫布").transform;
-        #endregion
 
         textCombo = GameObject.Find("連擊數量").GetComponent<Text>();
+        imgProgressBar = GameObject.Find("歌曲進度").GetComponent<Image>();
+        musicLength = musicData.music.length;
+        groupEndScore = GameObject.Find("評分畫面").GetComponent<CanvasGroup>();
+        #endregion
+
+        textEndScore = GameObject.Find("評分").GetComponent<Text>();
     }
 
     private void Update()
@@ -165,6 +188,7 @@ public class MusicManager : MonoBehaviour
         CheckPoint(pointCheckDown, nameDown, out objPointDown, out areaTypeDown);
         ClickCheck(KeyCode.F, areaTypeUp, objPointUp, v2TextUp);
         ClickCheck(KeyCode.J, areaTypeDown, objPointDown, v2TextDown);
+        ProgressBarEffect();
     }
 
     // 觸發事件：collision 觸發到的物件
@@ -176,6 +200,27 @@ public class MusicManager : MonoBehaviour
     #endregion
 
     #region 方法
+    /// <summary>
+    /// 歌曲進度條效果：隨著時間更新
+    /// 判定載入時間是否超出音樂時間並處理 MusicEnd 方法
+    /// </summary>
+    private void ProgressBarEffect()
+    {
+        // Time.timeSinceLevelLoad 場景載入時間
+        imgProgressBar.fillAmount = Time.timeSinceLevelLoad / musicLength;
+        // 尚未結束 並且 載入時間 超出 音樂時間 就結束
+        if (!musicEnd && Time.timeSinceLevelLoad >= musicLength) MusicEnd();
+    }
+
+    /// <summary>
+    /// 音樂結束：跳出結束畫面與評分
+    /// </summary>
+    private void MusicEnd()
+    {
+        musicEnd = true;
+        StartCoroutine(EndAndScore());
+    }
+
     /// <summary>
     /// 開始音樂節點生成
     /// </summary>
@@ -239,9 +284,48 @@ public class MusicManager : MonoBehaviour
         player.hp -= 20;
         textHp.text = player.hp + " / " + maxHp;        // 更新血量文字介面
         imgHp.fillAmount = player.hp / maxHp;           // 更新血條圖片介面
+        Combo(0, 0);
 
         // 判斷式 只有一個分號 可以忽略 大括號
         if (player.hp <= 0) StartCoroutine(GameOver());
+    }
+
+    /// <summary>
+    /// 有打擊到的節點數量
+    /// </summary>
+    private int clickPoint;
+
+    /// <summary>
+    /// 結束與分數處理
+    /// 評分準則
+    /// S：節點全部都有打到
+    /// A：百分之 90
+    /// B：百分之 80
+    /// C：百分之 80 以下
+    /// </summary>
+    private IEnumerator EndAndScore()
+    {
+        // 先處理分數
+        int total = musicData.points.Length;        // 節點總數
+
+        // => 黏巴達 Lambda
+        // 空節點數量 = 節點陣列.搜尋資料(資料 => 資料 等於 空節點).轉清單().數量
+        int noneCount = musicData.points.Where(x => x == PointType.none).ToList().Count;
+
+        print("總數：" + total + " | 空節點：" + noneCount);
+
+        total -= noneCount;
+
+        string score;
+
+        if (clickPoint / total == 1) score = "S";
+        else if ((float)clickPoint / (float)total >= 0.9f) score = "A";
+        else if ((float)clickPoint / (float)total >= 0.8f) score = "B";
+        else score = "C";
+
+        textEndScore.text = score;
+
+        yield return StartCoroutine(ShowPanel(groupEndScore));
     }
 
     /// <summary>
@@ -250,15 +334,24 @@ public class MusicManager : MonoBehaviour
     private IEnumerator GameOver()
     {
         player.Dead();                                  // 玩家動畫
+        yield return StartCoroutine(ShowPanel(groupFinal));
+    }
 
+    /// <summary>
+    /// 顯示群組面板效果
+    /// </summary>
+    /// <param name="group"></param>
+    /// <returns></returns>
+    private IEnumerator ShowPanel(CanvasGroup group)
+    {
         for (int i = 0; i < 40; i++)                    // 40 次數
         {
-            groupFinal.alpha += 0.03f;                  // 0.03 透明度
+            group.alpha += 0.03f;                  // 0.03 透明度
             yield return new WaitForSeconds(0.02f);     // 0.02 等待時間
         }
 
-        groupFinal.interactable = true;                 // 啟動互動
-        groupFinal.blocksRaycasts = true;
+        group.interactable = true;                 // 啟動互動
+        group.blocksRaycasts = true;
     }
 
     // Unity 播放、暫停與逐格播放
@@ -319,27 +412,48 @@ public class MusicManager : MonoBehaviour
                     Destroy(objPoint);
                     psUp.Play();
                     StartCoroutine(ShowText("PERFECT", v2Text, cPerfect));
+                    Combo();
                     break;
                 case AreaType.great:
                     AddScore(15);
                     Destroy(objPoint);
                     psUp.Play();
                     StartCoroutine(ShowText("GREAT", v2Text, cGreat));
+                    Combo();
                     break;
                 case AreaType.miss:
                     Destroy(objPoint);
                     StartCoroutine(ShowText("MISS", v2Text, cMiss));
+                    Combo(0, 0);
                     break;
             }
         }
     }
 
     /// <summary>
+    /// 連擊：次數增加、顯示連擊文字並更新文字內容
+    /// </summary>
+    /// <param name="add">要添加的連擊次數</param>
+    /// <param name="a">連擊文字的透明度</param>
+    private void Combo(int add = 1, float a = 1)
+    {
+        if (add == 0) combo = 0;            // 連擊失敗，次數歸零
+
+        combo += add;
+        Color c = textCombo.color;
+        c.a = a;
+        textCombo.color = c;
+        textCombo.text = "COMBO " + combo;
+    }
+
+    /// <summary>
     /// 添加分數
+    /// 紀錄打擊到的節點數量
     /// </summary>
     /// <param name="add">要增加的分數</param>
     private void AddScore(int add)
     {
+        clickPoint++;
         score += add;
         textScore.text = "SCORE：" + score;
     }
